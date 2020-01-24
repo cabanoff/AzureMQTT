@@ -1,0 +1,77 @@
+# depslib dependency file v1.0
+1568138918 source:/home/azure_mqtt/MQTTSSL-1/src/mqtt.c
+	<mqtt.h>
+
+1566826164 /home/azure_mqtt/MQTTSSL-1/include/mqtt.h
+	<mqtt_pal.h>
+
+1566826164 /home/azure_mqtt/MQTTSSL-1/include/mqtt_pal.h
+	<limits.h>
+	<string.h>
+	<stdarg.h>
+	<time.h>
+	<arpa/inet.h>
+	<pthread.h>
+	<openssl/bio.h>
+
+1566826164 source:/home/azure_mqtt/MQTTSSL-1/src/mqtt_pal.c
+	<mqtt.h>
+	<openssl/bio.h>
+	<openssl/ssl.h>
+	<openssl/err.h>
+	<errno.h>
+
+1576260227 source:/home/azure_mqtt/MQTTSSL-1/src/simple_subscriber.c
+	<unistd.h>
+	<stdlib.h>
+	<stdio.h>
+	<signal.h>
+	<mqtt.h>
+	<posix_sockets.h>
+	<parse.h>
+
+1566826164 /home/azure_mqtt/MQTTSSL-1/include/posix_sockets.h
+	<stdio.h>
+	<sys/types.h>
+	<sys/socket.h>
+	<netdb.h>
+	<fcntl.h>
+
+1568640648 /home/azure_mqtt/MQTTSSL-1/include/parse.h
+
+1576281970 source:/home/azure_mqtt/MQTTSSL-1/src/parse.c
+	<unistd.h>
+	<stdlib.h>
+	<stdio.h>
+	<time.h>
+	<string.h>
+	<mqtt.h>
+
+1568138918 source:/home/kontron/azure_mqtt/MQTTSSL-1/src/mqtt.c
+	<mqtt.h>
+
+1566826164 source:/home/kontron/azure_mqtt/MQTTSSL-1/src/mqtt_pal.c
+	<mqtt.h>
+	<openssl/bio.h>
+	<openssl/ssl.h>
+	<openssl/err.h>
+	<errno.h>
+
+1579628275 source:/home/kontron/azure_mqtt/MQTTSSL-1/src/parse.c
+	<unistd.h>
+	<stdlib.h>
+	<stdio.h>
+	<time.h>
+	<string.h>
+	<mqtt.h>
+
+1579628498 source:/home/kontron/azure_mqtt/MQTTSSL-1/src/simple_subscriber.c
+	<unistd.h>
+	<stdlib.h>
+	<stdio.h>
+	<signal.h>
+	<mqtt.h>
+	<posix_sockets.h>
+	<parse.h>
+	<mosquitto.h>
+
