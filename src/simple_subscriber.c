@@ -35,17 +35,17 @@
 
 #define TOPIC_IN "mqtt-kontron/lora-gatway"
 #define ADDR_IN  "localhost"
-#define ADDR_OUT2 "mqtt.thethings.io"
+//#define ADDR_OUT2 "mqtt.thethings.io"
 //#define ADDR_OUT2 "localhost"
-#define TOPIC_OUT2 "v2/things/GfPq9BoJgm73pGrynXafogS_6kzVBo2wWnmzGCKr4J0"
+//#define TOPIC_OUT2 "v2/things/GfPq9BoJgm73pGrynXafogS_6kzVBo2wWnmzGCKr4J0"
 //#define TOPIC_OUT2 "v2/things/1ZtGJvaiCCoVbvlliX16R7tDwh1FxYnQfQgcySsam34"
 //#define TOPIC_OUT2 "v2/things/LCJzGT3QL6jucKuFcuTyBbvQzYIMunWvHUK1ZKDdfuQ"
 //#define TOPIC_OUT2 "smartherd/test"
 
 //#define ADDR_OUT "localhost"
-#define ADDR_OUT "95.46.114.123"
-#define TOPIC_OUT "smartherd/gateway1"
-#define VERSION "4.011"
+//#define ADDR_OUT "95.46.114.123"
+//#define TOPIC_OUT "smartherd/gateway1"
+#define VERSION "4.15"
 
 
 
@@ -64,36 +64,37 @@ int quit_sig; /* 1 -> application terminates without shutting down the hardware 
 struct mqtt_client clientIn, clientOut, clientOut2;
 uint8_t sendbufIn[2048]; /* sendbuf should be large enough to hold multiple whole mqtt messages */
 uint8_t recvbufIn[1024]; /* recvbuf should be large enough any whole mqtt message expected to be received */
-uint8_t sendbufOut[2048]; /* sendbuf should be large enough to hold multiple whole mqtt messages */
-uint8_t recvbufOut[1024]; /* recvbuf should be large enough any whole mqtt message expected to be received */
-uint8_t sendbufOut2[2048]; /* sendbuf should be large enough to hold multiple whole mqtt messages */
-uint8_t recvbufOut2[1024]; /* recvbuf should be large enough any whole mqtt message expected to be received */
+//uint8_t sendbufOut[2048]; /* sendbuf should be large enough to hold multiple whole mqtt messages */
+//uint8_t recvbufOut[1024]; /* recvbuf should be large enough any whole mqtt message expected to be received */
+//uint8_t sendbufOut2[2048]; /* sendbuf should be large enough to hold multiple whole mqtt messages */
+//uint8_t recvbufOut2[1024]; /* recvbuf should be large enough any whole mqtt message expected to be received */
 uint8_t sendbufSSL[2048];
 uint8_t recvbufSSL[1024];
 
 
 int sockfdIn = -1;
-int sockfdOut = -1;
-int sockfdOut2 = -1;
+//int sockfdOut = -1;
+//int sockfdOut2 = -1;
 //BIO* sockfdSSL;
 //SSL_CTX* ssl_ctx;
 const char* ca_file;
 const char* addrIn;
-const char* addrOut;
-const char* addrOut2;
+//const char* addrOut;
+//const char* addrOut2;
 const char* addrSSL;
 const char* port;
 const char* portSSL;
 const char* topicIn;
-const char* topicOut;
-const char* topicOut2;
+//const char* topicOut;
+//const char* topicOut2;
 const char* topicSSL;
-pthread_t client_daemonOut;
-pthread_t client_daemonOut2;
+//pthread_t client_daemonOut;
+//pthread_t client_daemonOut2;
 pthread_t client_daemonIn;
 pthread_t client_daemonSSL;
 
 int SSLSent = 0;
+int SSLConnect = 0;
 int msgId = 1;
 
 char* messageToPublish;
@@ -117,11 +118,11 @@ void subscribe_callback(void** unused, struct mqtt_response_publish *published);
  *       \ref __mqtt_send every so often. I've picked 100 ms meaning that
  *       client ingress/egress traffic will be handled every 100 ms.
  */
-void* publish_client_refresher(void* client);
+//void* publish_client_refresher(void* client);
 void* subscribe_client_refresher(void* client);
 void* SSLpublish_client_refresher(void* client);
-int makePublisher(void);
-int makePublisher2(void);
+//int makePublisher(void);
+//int makePublisher2(void);
 int makePublisherSSL(void);
 /**
     mosquitto functons
@@ -146,7 +147,7 @@ int mosquitto_error(int rc, const char* message)
 /**
  * @brief Safelty closes the \p sockfd and cancels the \p client_daemon before \c exit.
  */
-void exit_example(int status, int sockfdIn, int sockfdOut, int sockfdOut2, pthread_t *client_daemonIn, pthread_t *client_daemonOut,pthread_t *client_daemonOut2);
+void simple_exit(void);
 
 int main(int argc, const char *argv[])
 {
@@ -180,13 +181,16 @@ int main(int argc, const char *argv[])
     }
 
     /*get addres to publish if present*/
+    /*
     if (argc > 4) {
         addrOut = argv[4];
     } else {
         addrOut = ADDR_OUT;
     }
+    */
 
     /*get the topic name to publish if present*/
+    /*
     if (argc > 5) {
         topicOut = argv[5];
     } else {
@@ -194,7 +198,7 @@ int main(int argc, const char *argv[])
     }
     addrOut2 = ADDR_OUT2;
     topicOut2 = TOPIC_OUT2;
-
+    */
     ca_file = CERTIFICATEFILE;  //SSL certificate
     addrSSL = HOST_SSL;
     portSSL = PORT_SSL_STR;
@@ -219,7 +223,7 @@ int main(int argc, const char *argv[])
 	if (rc != MOSQ_ERR_SUCCESS)
 	{
 		mosquitto_error(rc, "Error: opts_set protocol version");
-		exit_example(EXIT_SUCCESS, sockfdIn, sockfdOut, sockfdOut2, &client_daemonIn, NULL,NULL);
+		simple_exit();
 	}
 	else
 	{
@@ -229,11 +233,12 @@ int main(int argc, const char *argv[])
 	// connect
 
 	printf("2 Connecting...\r\n");
+
 	rc = mosquitto_connect(mosqSSL, HOST_SSL, PORT_SSL, 10);
 	if (rc != MOSQ_ERR_SUCCESS)
 	{
 		mosquitto_error(rc,NULL);
-		exit_example(EXIT_SUCCESS, sockfdIn, sockfdOut, sockfdOut2, &client_daemonIn, NULL,NULL);
+		simple_exit();
 	}
 
 	printf("3 Connect returned OK\r\n");
@@ -251,7 +256,7 @@ int main(int argc, const char *argv[])
 	if (rc != MOSQ_ERR_SUCCESS)
 	{
 		mosquitto_error(rc,NULL);
-		exit_example(EXIT_SUCCESS, sockfdIn, sockfdOut, sockfdOut2, &client_daemonIn, NULL,NULL);
+		simple_exit();
 	}
 
 	printf("5 Publish returned OK\r\n");
@@ -260,46 +265,59 @@ int main(int argc, const char *argv[])
 	// see https://github.com/eclipse/mosquitto/blob/master/lib/mosquitto.h
 	//sleep(5);
 	printf("6 Entering Mosquitto Loop...\r\n");
-	 /* start a thread to refresh the SSL publisher mosquitto client (handle egress and ingree client traffic) */
-
+    //start a thread to refresh the SSL publisher mosquitto client (handle egress and ingree client traffic)
+/*
     if(pthread_create(&client_daemonSSL, NULL, SSLpublish_client_refresher, mosqSSL)) {
         fprintf(stderr, "Failed to start SSLpublisher mosquitto client daemon.\n");
-       exit_example(EXIT_SUCCESS, sockfdIn, sockfdOut, sockfdOut2, &client_daemonIn, NULL,NULL);
+       simple_exit();
     }
-
+*/
 	//mosquitto_loop_forever(mosqSSL, -1, 1);
-/*
+
 	while(SSLSent == 0){
         mosquitto_loop(mosqSSL, -1, 1);
 	}
-*/
-	//mosquitto_loop_start(mosqSSL);
+	mosquitto_disconnect(mosqSSL);
+
 /*
+//	mosquitto_loop_start(mosqSSL);
+
 	printf("Connecting...\r\n");
 	rc = mosquitto_connect(mosqSSL, HOST_SSL, PORT_SSL, 10);
 	if (rc != MOSQ_ERR_SUCCESS)
 	{
 		mosquitto_error(rc,NULL);
-		exit_example(EXIT_SUCCESS, sockfdIn, sockfdOut, sockfdOut2, &client_daemonIn, NULL,NULL);
+		simple_exit();
 	}
     sleep(5);
 	printf("Connect returned OK\r\n");
 
 	printf("Publishing....\r\n");
-	rc = mosquitto_publish(mosqSSL, &msgId, TOPIC_SSL, sizeof(msg) - 1, msg, 1, true);
+	rc = mosquitto_publish(mosqSSL, &msgId, TOPIC_SSL, strlen(messageToPublishAzure), messageToPublishAzure, 1, true);
 	if (rc != MOSQ_ERR_SUCCESS)
 	{
+		printf("Mosquitto publish error\r\n");
 		mosquitto_error(rc,NULL);
-		exit_example(EXIT_SUCCESS, sockfdIn, sockfdOut, sockfdOut2, &client_daemonIn, NULL,NULL);
+		simple_exit();
 	}
     //sleep(5);
 	printf("Publish returned OK\r\n");
-	*/
-	//while(SSLSent == 0);
-    //mosquitto_loop_stop(mosqSSL,false);
 
-	//mosquitto_lib_cleanup();
-	//printf("7 End mosquitto part\r\n");
+	while(SSLSent == 0){
+        mosquitto_loop(mosqSSL, -1, 1);
+	}
+
+	mosquitto_lib_cleanup();
+	printf("7 End mosquitto part\r\n");
+	*/
+	//mosquitto_disconnect(mosqSSL);
+	//while (1);
+/*
+	if(pthread_create(&client_daemonSSL, NULL, SSLpublish_client_refresher, mosqSSL)) {
+        fprintf(stderr, "Failed to start SSLpublisher mosquitto client daemon.\n");
+       simple_exit();
+    }
+*/
 /****************stop mosquitto part *****************************/
 
 
@@ -308,7 +326,7 @@ int main(int argc, const char *argv[])
 
     if(sockfdIn == -1){
         perror("Failed to open input socket: ");
-        exit_example(EXIT_SUCCESS, sockfdIn, sockfdOut, sockfdOut2, &client_daemonIn, NULL,NULL);
+        simple_exit();
     }
 
     mqtt_init(&clientIn, sockfdIn, sendbufIn, sizeof(sendbufIn), recvbufIn, sizeof(recvbufIn), subscribe_callback);
@@ -317,14 +335,14 @@ int main(int argc, const char *argv[])
     /* check that we don't have any errors */
     if (clientIn.error != MQTT_OK) {
         fprintf(stderr, "connect subscriber error: %s\n", mqtt_error_str(clientIn.error));
-        exit_example(EXIT_SUCCESS, sockfdIn, sockfdOut, sockfdOut2, &client_daemonIn, NULL,NULL);
+        simple_exit();
     }
 
     /* start a thread to refresh the subscriber client (handle egress and ingree client traffic) */
 
     if(pthread_create(&client_daemonIn, NULL, subscribe_client_refresher, &clientIn)) {
         fprintf(stderr, "Failed to start subscriber client daemon.\n");
-       exit_example(EXIT_SUCCESS, sockfdIn, sockfdOut, sockfdOut2, &client_daemonIn, NULL,NULL);
+       simple_exit();
     }
 
     /* subscribe */
@@ -348,10 +366,11 @@ int main(int argc, const char *argv[])
         int sent_ok = 0;
         if(messageToPublish != NULL)  //there is a mesasage to publish
         {
+        /*
             if(makePublisher() != -1){
                 printf("%s published : \"%s\"\n", argv[0], messageToPublish);
 
-                 /* republish the message */
+                 // republish the message
                 mqtt_publish(&clientOut, topicOut, messageToPublish, strlen(messageToPublish), MQTT_PUBLISH_QOS_0);
                 if (clientOut.error == MQTT_OK) {
                     if(mqtt_sync(&clientOut) == MQTT_OK) sent_ok = 1;
@@ -366,18 +385,56 @@ int main(int argc, const char *argv[])
                         }
                      }
                 }
-                /***********************mosquitto part***************************************************************/
+         */
+/***************************************************mosquitto part***************************************************************/
                 msgId++;
+                int attempt = 1;
+                SSLConnect = 0;
+                do{
+                    printf("Try to connect to publish %d message, attempt N%d\n\r",msgId,attempt);
+                    rc = mosquitto_connect(mosqSSL, HOST_SSL, PORT_SSL, 10);
+                    attempt ++;
+                    if(rc != MOSQ_ERR_SUCCESS)sleep(5);
+                }
+                while(rc != MOSQ_ERR_SUCCESS);
                 //sprintf(mosquittoMess,"Test from Kontron N%d",msgId);
+                SSLSent = 0;
+                printf("Publishing N%d message\n\r",msgId);
                 rc = mosquitto_publish(mosqSSL, &msgId, TOPIC_SSL, strlen(messageToPublishAzure), messageToPublishAzure, 1, true);
-                if (rc != MOSQ_ERR_SUCCESS)
-                {
+                if (rc != MOSQ_ERR_SUCCESS){
                     printf("Mosquitto error, can't send N%d message\n\r",msgId);
                     mosquitto_error(rc,NULL);
                     //exit_example(EXIT_SUCCESS, sockfdIn, sockfdOut, sockfdOut2, &client_daemonIn, NULL,NULL);
                 }
-                /***********************end mosquitto part***********************************************************/
-
+                printf("N%d message is published\n\r",msgId);
+                                                                /**  <--- после вывода этого сообщения виснет*/
+                int scount = 0;
+                while(SSLSent == 0){
+                    usleep(10000);  //10ms sleep
+                    scount++;
+                    mosquitto_loop(mosqSSL, -1, 1);
+                    if(scount > 100*60){//wait for 1 min
+                        printf("Disconnecting\n\r");
+                        mosquitto_disconnect(mosqSSL);
+                        sleep(5);
+                        scount = 0;
+                        rc = mosquitto_connect(mosqSSL, HOST_SSL, PORT_SSL, 10);
+                        if (rc != MOSQ_ERR_SUCCESS){
+                            mosquitto_error(rc,NULL);
+                            simple_exit();
+                        }
+                        SSLSent = 0;
+                        printf("Reconnecting to publish N%d message\n\r",msgId);
+                        rc = mosquitto_publish(mosqSSL, &msgId, TOPIC_SSL, strlen(messageToPublishAzure), messageToPublishAzure, 1, true);
+                        if (rc != MOSQ_ERR_SUCCESS){
+                            printf("Mosquitto error, can't send N%d message\n\r",msgId);
+                            mosquitto_error(rc,NULL);
+                        }
+                    }
+                }
+                mosquitto_disconnect(mosqSSL);
+/************************************************end mosquitto part***********************************************************/
+        /*
             }
             if(sent_ok != 0){
                 //parse_prepare_mess();
@@ -388,23 +445,23 @@ int main(int argc, const char *argv[])
                 fprintf(stderr, "publisher error: %s\n", mqtt_error_str(clientOut.error));
                 usleep(1000000U);
             }
-
+        */
         }
 
     }
 
     /* disconnect */
     printf("\n%s disconnecting from %s\n", argv[0], addrIn);
-    printf("\n%s disconnecting from %s\n", argv[0], addrOut);
+    printf("\n%s disconnecting from %s\n", argv[0], addrSSL);
     sleep(1);
 
     /* exit */
     //exit_example(EXIT_SUCCESS, sockfdIn, sockfdOut, &client_daemonIn, &client_daemonOut);
-    exit_example(EXIT_SUCCESS, sockfdIn, sockfdOut, sockfdOut2, &client_daemonIn, NULL,NULL);
+    simple_exit();
 }
 
 /* --- PRIVATE FUNCTIONS DEFINITION ----------------------------------------- */
-
+/**
 int makePublisher(void){
 
     sockfdOut = open_nb_socket(addrOut, port);
@@ -417,7 +474,7 @@ int makePublisher(void){
     mqtt_init(&clientOut, sockfdOut, sendbufOut, sizeof(sendbufOut), recvbufOut, sizeof(recvbufOut), publish_callback);
     mqtt_connect(&clientOut, "publishing_client1", NULL, NULL, 0, NULL, NULL, 0, 400);
 
-    /* check that we don't have any errors */
+    // check that we don't have any errors
     if (clientOut.error != MQTT_OK) {
         fprintf(stderr, "connect publisher error: %s\n", mqtt_error_str(clientOut.error));
         //exit_example(EXIT_FAILURE, sockfdIn, sockfdOut,NULL,NULL);
@@ -426,7 +483,7 @@ int makePublisher(void){
 
     }
     return 0;
-     /* start a thread to refresh the publisher client (handle egress and ingree client traffic) */
+      //start a thread to refresh the publisher client (handle egress and ingree client traffic)
 //
 //    if(pthread_create(&client_daemonOut, NULL, publish_client_refresher, &clientOut)) {
 //        fprintf(stderr, "Failed to start publisher client daemon.\n");
@@ -436,7 +493,8 @@ int makePublisher(void){
 //    }
 
 }
-
+*/
+/*
 int makePublisher2(void){
 
     sockfdOut2 = open_nb_socket(addrOut2, port);
@@ -449,7 +507,7 @@ int makePublisher2(void){
     mqtt_init(&clientOut2, sockfdOut2, sendbufOut2, sizeof(sendbufOut2), recvbufOut2, sizeof(recvbufOut2), publish_callback);
     mqtt_connect(&clientOut2, "publishing_client2", NULL, NULL, 0, NULL, NULL, 0, 400);
 
-    /* check that we don't have any errors */
+    // check that we don't have any errors
     if (clientOut2.error != MQTT_OK) {
         fprintf(stderr, "connect publisher2 error: %s\n", mqtt_error_str(clientOut2.error));
         //exit_example(EXIT_FAILURE, sockfdIn, sockfdOut,NULL,NULL);
@@ -458,7 +516,7 @@ int makePublisher2(void){
 
     }
     return 0;
-     /* start a thread to refresh the publisher client (handle egress and ingree client traffic) */
+     // start a thread to refresh the publisher client (handle egress and ingree client traffic)
 //
 //    if(pthread_create(&client_daemonOut, NULL, publish_client_refresher, &clientOut)) {
 //        fprintf(stderr, "Failed to start publisher client daemon.\n");
@@ -469,7 +527,7 @@ int makePublisher2(void){
 
 }
 
-
+*/
 
 void sig_handler(int sigio) {
 	if (sigio == SIGQUIT) {
@@ -478,19 +536,24 @@ void sig_handler(int sigio) {
 		exit_sig = 1;
 	}
 }
-void exit_example(int status, int sockfdIn, int sockfdOut, int sockfdOut2, pthread_t *client_daemonIn, pthread_t *client_daemonOut,pthread_t *client_daemonOut2)
+
+void exit_example(int status, int sockfdIn, pthread_t *client_daemonIn, pthread_t *client_daemonOut,pthread_t *client_daemonOut2)
 {
     if (sockfdIn != -1) close(sockfdIn);
-    if (sockfdOut != -1) close(sockfdOut);
-    if (sockfdOut2 != -1) close(sockfdOut2);
+    //if (sockfdOut != -1) close(sockfdOut);
+    //if (sockfdOut2 != -1) close(sockfdOut2);
     if (client_daemonIn != NULL) pthread_cancel(*client_daemonIn);
-    if (client_daemonOut != NULL) pthread_cancel(*client_daemonOut);
-    if (client_daemonOut2 != NULL) pthread_cancel(*client_daemonOut2);
-    pthread_cancel(client_daemonSSL);
+    //if (client_daemonOut != NULL) pthread_cancel(*client_daemonOut);
+    //if (client_daemonOut2 != NULL) pthread_cancel(*client_daemonOut2);
+   // pthread_cancel(client_daemonSSL);
     mosquitto_lib_cleanup();
     exit(status);
 }
 
+void simple_exit(void)
+{
+    exit_example(EXIT_SUCCESS, sockfdIn, &client_daemonIn, NULL,NULL);
+}
 
 void publish_callback(void** unused, struct mqtt_response_publish *published)
 {
@@ -554,7 +617,7 @@ void* SSLpublish_client_refresher(void* client)
 void msq_connect_callback(struct mosquitto* mosq, void* obj, int result)
 {
 	printf("Connect callback returned result: %s\r\n", mosquitto_strerror(result));
-
+    SSLConnect = 1;
 	if (result == MOSQ_ERR_CONN_REFUSED)
 		printf("Connection refused. Please check DeviceId, IoTHub name or if your SAS Token has expired.\r\n");
 }

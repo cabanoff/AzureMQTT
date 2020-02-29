@@ -32,6 +32,7 @@ typedef struct{
     uint8_t activity1;
     uint8_t activity2;
     uint8_t activity3;
+    uint8_t activity4;
     uint8_t rumination1;
     uint8_t rumination2;
     uint8_t rumination3;
@@ -222,6 +223,24 @@ void formJsonStringsAzure(sensorMess_t*);
     activity1Str[1] = message[21];
     activity1Str[2] = 0;
     sensorMess->activity1 = (uint8_t)strtol(activity1Str, NULL, 16);
+    /*find activity 2*/
+    char activity2Str[3];
+    activity2Str[0] = message[22];
+    activity2Str[1] = message[23];
+    activity2Str[2] = 0;
+    sensorMess->activity2 = (uint8_t)strtol(activity2Str, NULL, 16);
+    /*find activity 2*/
+    char activity3Str[3];
+    activity3Str[0] = message[24];
+    activity3Str[1] = message[25];
+    activity3Str[2] = 0;
+    sensorMess->activity3 = (uint8_t)strtol(activity3Str, NULL, 16);
+    /*find activity 4*/
+    char activity4Str[3];
+    activity4Str[0] = message[26];
+    activity4Str[1] = message[27];
+    activity4Str[2] = 0;
+    sensorMess->activity4 = (uint8_t)strtol(activity4Str, NULL, 16);
 
     return 1;
 
@@ -312,8 +331,8 @@ void formJsonStringsAzure(sensorMess_t* sensorMess)
 {
     snprintf(sensorMess->jsonStrAzure,MAX_JSON_SIZE,\
     "{\"_id\":\"%d%x\",\"deviceId\":\"%d\",\"timestamp\":\"%s\",\"activity1\":%d,\
-\"activity2\":%d,\"rumination\":%d,\"chewing\":%d,\"rest\":%d}",\
+\"activity2\":%d,\"activity3\":%d,\"activity4\":%d,\"rumination\":%d,\"chewing\":%d,\"rest\":%d}",\
     sensorMess->deviceID,sensorMess->messageID,sensorMess->deviceID,sensorMess->timeAzure,sensorMess->activity1,\
-    sensorMess->activity2,sensorMess->rumination1,sensorMess->chewing1,sensorMess->rest1);
+    sensorMess->activity2,sensorMess->activity3,sensorMess->activity4,sensorMess->rumination1,sensorMess->chewing1,sensorMess->rest1);
 }
 
