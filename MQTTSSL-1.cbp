@@ -56,13 +56,11 @@
 			<Add option="-Wall" />
 		</Compiler>
 		<Linker>
-			<Add option="-lpthread `pkg-config --libs openssl`" />
-			<Add option="-D MQTT_USE_BIO" />
+			<Add option="-lpthread" />
 			<Add option="-lmosquitto" />
 		</Linker>
 		<Unit filename="include/mqtt.h" />
 		<Unit filename="include/mqtt_pal.h" />
-		<Unit filename="include/openssl_sockets.h" />
 		<Unit filename="include/parse.h" />
 		<Unit filename="include/posix_sockets.h" />
 		<Unit filename="src/mqtt.c">
