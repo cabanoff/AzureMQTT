@@ -397,6 +397,9 @@ int main(int argc, const char *argv[])
                     SSLConnect = 0;
 
                     rc = mosquitto_connect(mosqSSL, HOST_SSL, PORT_SSL, 10);
+                                                            /** <- зависает здесь,
+                                   <--------       вызывется msq_disconnect_callback(result = 1)
+                                                   последнее сообщение в терминале - "Unexpected disconnection 1"*/
                     if (rc != MOSQ_ERR_SUCCESS)
                     {
                         mosquitto_error(rc,NULL);
