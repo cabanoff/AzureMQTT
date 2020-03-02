@@ -45,7 +45,7 @@
 //#define ADDR_OUT "localhost"
 //#define ADDR_OUT "95.46.114.123"
 //#define TOPIC_OUT "smartherd/gateway1"
-#define VERSION "4.18"
+#define VERSION "4.19"
 
 
 
@@ -446,7 +446,39 @@ int main(int argc, const char *argv[])
         }
         if((quit_sig != 1) && (exit_sig != 1)){
             printf("Connection lost, try to reconnect.\n\r");
-            sleep(10); //try to reconnect
+    /*********************************************reinitialization****************************************************************/
+
+            mosquitto_destroy(mosqSSL);
+            mosquitto_lib_cleanup();
+            sleep(10);
+
+            mosquitto_lib_init();
+
+            mosqSSL = mosquitto_new(DEVICEID, false, NULL);
+            // add callback functions
+            mosquitto_connect_callback_set(mosqSSL, msq_connect_callback);
+            mosquitto_publish_callback_set(mosqSSL, msq_publish_callback);
+            mosquitto_disconnect_callback_set(mosqSSL, msq_disconnect_callback);
+
+            // set mosquitto username, password and options
+            mosquitto_username_pw_set(mosqSSL, USERNAME, PWD);
+            // specify the certificate to use
+            mosquitto_tls_set(mosqSSL, CERTIFICATEFILE, NULL, NULL, NULL, NULL);
+
+            // specify the mqtt version to use
+            int option = (int)(MQTT_PROTOCOL_V311);
+            rc = mosquitto_opts_set(mosqSSL, MOSQ_OPT_PROTOCOL_VERSION, &option);
+            if (rc != MOSQ_ERR_SUCCESS)
+            {
+                mosquitto_error(rc, "Error: opts_set protocol version");
+                simple_exit();
+            }
+            else
+            {
+                printf("1 Setting up options OK\r\n");
+            }
+
+
         }
     }
 
