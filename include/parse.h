@@ -15,14 +15,25 @@
 
 
 /**
- * @brief returns first message in stack.
+ * @brief returns prepared message
  *
- * @param[in] pointer to the thethings.io mqtt message, and azure mqtt message
+ * @param[in] message string for copy to,
+ * @param[in] len - length of this string
  *
- * @returns NULL if no mesages stored
+ * @returns message to be sent
  */
- char* parse_get_mess(void);
+ char* parse_get_mess(char* message,unsigned int len);
+
  char* parse_get_mess_azure(void);
+
+ /**
+ * @brief initialization deinitialization mutex
+ *
+ *
+ */
+ void parse_init(void);
+ void parse_deinit(void);
+
 
 #endif
 

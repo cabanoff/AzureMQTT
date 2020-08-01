@@ -13,7 +13,7 @@
 
 #define DEBUG_PUBLISH "[{\"key\":\"MartaRum\",\"value\":1}]"
 #define MAX_JSON_SIZE 1000
-#define MAX_MESSAGES 50
+#define MAX_MESSAGES 100
 #define CURRENT sensorMess[messCounter]
 
 /**
@@ -25,7 +25,7 @@
  * @returns none
  */
 typedef struct{
-    char jsonStr[MAX_JSON_SIZE];    // 1 - activity1, 2 - Rum1, 3 - Chew1, 4 - Rest1
+    //char jsonStr[MAX_JSON_SIZE];    // 1 - activity1, 2 - Rum1, 3 - Chew1, 4 - Rest1
     char jsonStrAzure[MAX_JSON_SIZE]; //
     uint32_t deviceID;
     uint32_t messageID;
@@ -42,6 +42,7 @@ typedef struct{
     uint8_t rest1;
     uint8_t rest2;
     uint8_t rest3;
+    uint8_t position1;
     char time[20];
     char timeAzure[30];
     //uint8_t counter;
@@ -49,13 +50,25 @@ typedef struct{
 
 size_t messageSize;
 sensorMess_t sensorMess[MAX_MESSAGES];           //reserv memory for 50 messages
-uint16_t messCounter = 0;
+volatile uint16_t messCounter = 0;
+//volatile int waitMutex;
 //char* messToSend = NULL;
 
 /* --- PRIVATE FUNCTIONS DECLARATION ---------------------------------------- */
 int getDevInfo(char*,sensorMess_t*);
-void formJsonStrings(sensorMess_t*);
+//void formJsonStrings(sensorMess_t*);
 void formJsonStringsAzure(sensorMess_t*);
+
+void parse_init(void){
+    //mutex initialization
+
+    //waitMutex = 0;
+}
+void parse_deinit(void){
+    //destroy mutex
+
+
+}
 
  void parse_save(const char* message, size_t size)
  {
@@ -66,10 +79,13 @@ void formJsonStringsAzure(sensorMess_t*);
     struct timespec fetch_time;
     char timebuf[30];
     strftime(timebuf, 20, "%Y%m%d%H%M%S", tm_info);     /*get UTC time*/
+    //pthread_mutex_lock(&mutex);
+    //waitMutex = 1;
     memcpy(CURRENT.time,timebuf,20);  // save time
 
     /* local timestamp generation until we get accurate GPS time */
     //char fetch_timestamp[30];
+    //printf("%s,\n\r",message);
 
     //struct tm * x;
 	clock_gettime(CLOCK_REALTIME, &fetch_time);
@@ -83,11 +99,15 @@ void formJsonStringsAzure(sensorMess_t*);
     if(deviceInfo == 0)return; //message is not vallid;
 
 
-    formJsonStrings(&CURRENT);
+    //formJsonStrings(&CURRENT);
     formJsonStringsAzure(&CURRENT);
     //snprintf(debMessage,MAX_JSON_SIZE,"[{\"key\":\"MartaRum\",\"value\":1,\"datetime\":\"%s\"}]", timebuf);
 
     if(messCounter < (MAX_MESSAGES-1))messCounter++;
+    //waitMutex = 0;
+    //pthread_mutex_unlock(&mutex);
+    //printf("%d %s,\n\r",messCounter,message);
+
 
  }
 
@@ -95,15 +115,21 @@ void formJsonStringsAzure(sensorMess_t*);
 /**
  * @brief returns prepared message
  *
- * @param[in] none
+ * @param[in] message string for copy to,
+ * @param[in] len - length of this string
  *
  * @returns message to be sent
  */
-  char* parse_get_mess(void)
+  char* parse_get_mess(char* message, unsigned int len)
   {
+
     if(messCounter){
         messCounter--;
-        return(sensorMess[messCounter].jsonStr);
+        if(len > strlen(sensorMess[messCounter].jsonStrAzure))
+        {
+            memcpy(message,sensorMess[messCounter].jsonStrAzure,strlen(sensorMess[messCounter].jsonStrAzure)+1);
+        }
+        return(sensorMess[messCounter].jsonStrAzure);
         //return(sensorMess[messCounter].time);
     }
     return NULL;
@@ -130,6 +156,21 @@ void formJsonStringsAzure(sensorMess_t*);
  *  first 4 bytes of message is device ID
  *  4bytes = 8 digits
  *  01000000 970F0000 00 01 9F000000 00 00 00000001000000000000000000000000
+ *    typedef struct{
+ *    uint32_t address;
+ *    uint32_t counter;
+ *    uint8_t  type;
+ *    uint8_t  cowCond;
+ *    uint8_t  cowActivity[ACTIVITY_PARTS];
+ *    uint8_t  cowCondAux1;
+ *    uint8_t  cowCondAux2;
+ *    uint8_t  cowPosition1;
+ *    uint8_t  temp3;
+ *    uint8_t  inT;
+ *    uint8_t  pulse;
+ *     uint8_t  aes128[12];
+ *  } message_t;
+ *
  * @param[in] message received from sensor,
  * @param[in] sensorMess struct for store sensor information,
  *
@@ -217,6 +258,8 @@ void formJsonStringsAzure(sensorMess_t*);
     sensorMess->chewing3 = chewing;
     sensorMess->rumination3 = rumination;
     sensorMess->rest3 = rest;
+    if(message[33] == '0')sensorMess->position1 = 0;
+    else sensorMess->position1 = 1;
     /*find activity 1*/
     char activity1Str[3];
     activity1Str[0] = message[20];
@@ -272,7 +315,7 @@ void formJsonStringsAzure(sensorMess_t*);
  * @returns none
  */
 /* */
-
+/*
 void formJsonStrings(sensorMess_t* sensorMess)
 {
    // snprintf(sensorMess->jsonStr[0],MAX_JSON_SIZE,"[{\"key\":\"Dev%d_Act1\",\"value\":%d,\"datatime\":\"%s\"}]",
@@ -320,19 +363,20 @@ sensorMess->deviceID, sensorMess->rumination3, sensorMess->time,\
 sensorMess->deviceID, sensorMess->chewing3, sensorMess->time,\
 sensorMess->deviceID, sensorMess->rest3, sensorMess->time);
 }
+*/
 /**
     forms json string
-    {"_id":"5e1d0da752c6011229426371","temp":0,"deviceId":"2","bsId":"1","sim":false,
-    "timestamp":"2019-12-26T00:47:31.662Z","sentToAzure":false,"sentToServer":false,
-    "activity1":8,"activity2":30,"rumination":0,"chewing":0,"rest":1,
-    "createAt":"2020-01-14T00:39:03.013Z","updateAt":"2020-01-14T00:39:03.013Z"}
+    {"_id":"3194","deviceId":"31","timestamp":"2020-08-01T23:23:31.911Z","activity1":1,
+    "activity2":0,"activity3":0,"activity4":0,"rumination":0,"chewing":0,"rest":1,"rumination2":0,"position1":0}
 */
 void formJsonStringsAzure(sensorMess_t* sensorMess)
 {
     snprintf(sensorMess->jsonStrAzure,MAX_JSON_SIZE,\
     "{\"_id\":\"%d%x\",\"deviceId\":\"%d\",\"timestamp\":\"%s\",\"activity1\":%d,\
-\"activity2\":%d,\"activity3\":%d,\"activity4\":%d,\"rumination\":%d,\"chewing\":%d,\"rest\":%d}",\
+\"activity2\":%d,\"activity3\":%d,\"activity4\":%d,\"rumination\":%d,\"chewing\":%d,\"rest\":%d,\
+\"rumination2\":%d,\"position1\":%d}",\
     sensorMess->deviceID,sensorMess->messageID,sensorMess->deviceID,sensorMess->timeAzure,sensorMess->activity1,\
-    sensorMess->activity2,sensorMess->activity3,sensorMess->activity4,sensorMess->rumination1,sensorMess->chewing1,sensorMess->rest1);
+    sensorMess->activity2,sensorMess->activity3,sensorMess->activity4,sensorMess->rumination1,sensorMess->chewing1,\
+    sensorMess->rest1, sensorMess->rumination2, sensorMess->position1);
 }
 
